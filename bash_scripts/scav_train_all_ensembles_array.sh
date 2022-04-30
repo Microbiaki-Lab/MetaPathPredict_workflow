@@ -6,7 +6,7 @@
 #SBATCH --mem=187gb # Job memory request
 #SBATCH --time=1-12:00:00 # Time limit hrs:min:sec
 #SBATCH --output=logs/ensemble_training_%A-%a.log# Standard output/error
-#SBATCH --array=150-200
+#SBATCH --array=370-424
 #SBATCH --qos=scavenger
 #
 cd /vortexfs1/home/dgellermcgrath/ensemble/rdata/old_splits
