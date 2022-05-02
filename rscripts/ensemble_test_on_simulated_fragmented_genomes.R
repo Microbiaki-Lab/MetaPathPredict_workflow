@@ -131,9 +131,12 @@ test_and_get_ens_conf_matrices_for = function(formatted_test_data,
 
 safely_test_and_get_ens_conf_matrices_for = safely(test_and_get_ens_conf_matrices_for)
 
+plan(multicore, workers = 50) #49000 * 1024 ^2 - 30Gb per core, 10 cores total
+options(future.globals.maxSize = 51380224000)
 
 set.seed(123)
-ens_conf_matrices = pmap(#.progress = TRUE, .options = furrr_options(seed = 123),
+ens_conf_matrices = future_pmap(#.progress = TRUE, .options = furrr_options(seed = 123),
+  .options = furrr_options(seed = TRUE),
   list(
     list(formatted_test_data),
     model_names,
@@ -155,7 +158,7 @@ ens_gen_perf_metrics <- purrr::imap_dfr(
     dplyr::mutate(model_name = .y, .before = 1) %>%
     dplyr::relocate(c(F1, Precision, Recall, Specificity, `Balanced Accuracy`), .after = 1))
 
-strat =
+ens_strat =
   ens_conf_matrices %>%
   imap(~ .x$pred_md %>%
          mutate(grouping_col = str_replace(
@@ -193,7 +196,7 @@ strat =
 
 
 
-save(strat, ens_gen_perf_metrics, ens_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/ensemble_models_sparsification_test_results_so_far.rdata')
+save(ens_strat, ens_gen_perf_metrics, ens_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/ensemble_models_sparsification_test_results_so_far.rdata')
 #
 
 

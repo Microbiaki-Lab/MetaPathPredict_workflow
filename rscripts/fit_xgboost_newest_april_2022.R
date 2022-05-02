@@ -64,6 +64,7 @@ safely_fit = safely(fit_model)
 
 #run model fits in parallel
 results = future_pmap(
+  .options = furrr_options(seed = TRUE),
   list(
     leftover_vars,
     tune_files,
