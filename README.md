@@ -2,9 +2,9 @@
 
 ### General description of this project
 
-This is an annotated workflow for training machine learning models to predict the presence or absence of KEGG metabolic modules in genomes recovered from sequencing efforts.
+This is an annotated workflow for training machine learning models to predict the presence or absence of [KEGG metabolic modules](https://www.genome.jp/kegg/module.html) in bacterial genomes recovered from sequencing efforts.
 
-Genome datasets used for models in this project are from the NCBI RefSeq bacterial genomes database (version 209, 2021) categorized as "complete genomes", and the set of GTDB bacterial genomes (version r95, 2021) that were assessed to have completeness of 100, contamination of 0, strain heterogeneity of 0, and MIMAG quality of "High Quality" (and are not also present in the RefSeq genomes used). A total of 30,646 genomes are utilized here for training machine learning models and assessing their performance. 424 models have been trained and tested; one model has been created for each KEGG module which is present in at least 0.1% of these 30,646 genomes.
+Genome datasets used for models in this project are from the NCBI RefSeq bacterial genomes database (version 209, 2021) categorized as "complete genomes", and the set of GTDB bacterial genomes (version r95, 2021) that were assessed to have completeness of 100, contamination of 0, strain heterogeneity of 0, and MIMAG quality of "High Quality" (and are not also present in the RefSeq genomes used). A total of 30,646 genomes are utilized here for training machine learning models and assessing their performance. 424 models have been trained and tested; one model has been created for each KEGG module which is present in at least 0.1% of these 30,646 genomes. All model training and assessment was done using [Tidymodels](https://www.tidymodels.org/).
 
 The *rscripts/* folder contains code scripts in the following categories: training_scripts, model_assessment_scripts, and sql_db_scripts. Training_scripts has code for training machine learning models utilized in this project; model_assessment_scripts contains scripts for assessing the quality of trained models, and how they would perform on new, unseen data; sql_db_scripts has code used to create a SQL database containing all trained models that MetaPredict will query to make predictions on user input data.
 
