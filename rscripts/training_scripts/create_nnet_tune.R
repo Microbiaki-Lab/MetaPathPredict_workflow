@@ -41,7 +41,7 @@ nnet_spec <- # tuning specifications for the model
     activation = tune()
   ) %>%
   set_engine("nnet",
-             MaxNWts = 5000)
+             MaxNWts = 8000)
 
 nnet_workflow <- #create a workflow for this model
   workflow() %>%
