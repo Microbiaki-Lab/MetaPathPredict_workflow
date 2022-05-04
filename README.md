@@ -1,12 +1,16 @@
 ## MetaPredict workflow
 
-### General description of this project (more details to be added..)
+### General description of this project
 
 This is an annotated workflow for training machine learning models to predict the presence or absence of KEGG metabolic modules in genomes recovered from sequencing efforts.
 
 Genome datasets used for models in this project are from the NCBI RefSeq bacterial genomes database (version 209, 2021) categorized as "complete genomes", and the set of GTDB bacterial genomes (version r95, 2021) that were assessed to have completeness of 100, contamination of 0, strain heterogeneity of 0, and MIMAG quality of "High Quality" (and are not also present in the RefSeq genomes used). A total of 30,646 genomes are utilized here for training machine learning models and assessing their performance. 424 models have been trained and tested; one model has been created for each KEGG module which is present in at least 0.1% of these 30,646 genomes.
 
-The 'rscripts' folder contains code scripts in the following categories: training_scripts, sql_db_scripts, and model_assessment_scripts.
+The *rscripts/* folder contains code scripts in the following categories: training_scripts, model_assessment_scripts, and sql_db_scripts. Training_scripts has code for training machine learning models utilized in this project; model_assessment_scripts contains scripts for assessing the quality of trained models, and how they would perform on new, unseen data; sql_db_scripts has code used to create a SQL database containing all trained models that MetaPredict will query to make predictions on user input data.
+
+The *bash_scripts/* directory has scripts for training and assessing machine learning models on WHOI's Poseidon HPC.
+
+More details will be added here to give background information about KEGG metabolic modules, as well as the rationale for this project and the model types used. Plots and descriptions of performance metrics for MetaPredict's models will also be posted here.
 <br>  
 <br>  
 
@@ -35,14 +39,14 @@ The 'rscripts' folder contains code scripts in the following categories: trainin
 - **assess_which_ensemble_jobs_need_to_run_on_poseidon.R**: based on job logs on the Poseidon HPC, this code is simply determining which jobs failed and need to be re-run, or still have not been run yet. 
 <br>  
 
-### Description of code in the rscripts/sql_db_scripts directory:
+### Code in the rscripts/sql_db_scripts directory:
 - **create_metapredict_model_sql_database.R**: In the MetaPredict package, the models will be stored in an SQL database and will either be sequentially or batch loaded into memory to make predictions on user input data, or predictions will be run inside the database without loading any of the models into memory. The top sections of the code contain various scratch code used to create a sample SQL database and test querying the test database. The final bottom code section titled "create official MetaPredict SQL database" is where the current SQL database containing all current ensemble models was constructed on Poseidon.
 <br>  
 <br>  
 
 ## Details about the bash scripts in the bash_scripts directory:
 
-### Description of code in the bash_scripts/ directory:
+### Code in the bash_scripts/ directory:
 - **compute_train_all_ensemble_array.sh**: an array slurm script that calls training R scripts to train ensemble models, one per compute node. Sequentially calls create_model_env_vars.R, create_nnet_tune.R, create_xgboost_tune.R, and train_ensemble.R. Output is saved from each script so that future iterations of model training can be started up with intermediate output data from any of the scripts. 
 
 - **scav_train_all_ensemble_array.sh**: same as compute_train_all_ensemble_array.sh but it's executed on scavenger nodes (instead of regular compute nodes).
