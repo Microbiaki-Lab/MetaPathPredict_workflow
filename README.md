@@ -1,2 +1,16 @@
-# MetaPredict_workflow
-Workflow for training machine learning models for presence/absence prediction of KEGG metabolic modules
+## MetaPredict_workflow
+Workflow for training machine learning models for presence/absence prediction of KEGG metabolic modules.
+
+Genome datasets used for this modeling are the NCBI RefSeq bacterial genomes (version 209, 2021) categorized as "complete genomes", and the non-overlapping set of GTDB bacterial genomes (version r95, 2021) that were assessed to have completeness of 100, contamination of 0, strain heterogeneity of 0, and MIMAG quality of "High Quality". A total of 30,646 genomes  are being used for training machine learning models and assessing their performance with held-out test data. 424 models have been trained and tested; one model has been created for each KEGG module which is present in at least 0.1% of dataset genomes.
+
+The 'rscripts' folder contains code scripts in the following categories: training_scripts, sql_db_scripts, and model_assessment_scripts.
+
+### training_scripts: 
+  - **create_model_env_vars.R**: this script contains code to create train and test dataset splits for each model. Cross validation folds for nested cross validation are also created with this script; this is a list of various random samples of the training data that will be used to tune model hyperparameters. These training objects are then saved in a compressed binary format (.rdata) to be loaded in later model training scripts. If modeling is re-done later, this step is already complete and future modeling jobs can start with this pre-generated information.
+  - **create_nnet_tune.R**: code to assess a grid of possible hyperparamter values of a fully connected, multilayer perceptron neural network model on training data. The script saves the results of a grid search of the hyperparameter space via cross validation, emphasizing the following metrics: Kohen's Kappa and Receiving Operating Characteristic (ROC_AUC).
+  - **create_xgboost_tune.R**: code to assess a grid of possible hyperparamter values of an Extreme Gradient Boosting (XGBoost) model on training data. The script saves the results of a grid search of the hyperparameter space via cross validation, emphasizing the following metrics: Kohen's Kappa and Receiving Operating Characteristic (ROC_AUC).
+  - **train_ensemble.R**: code that fits a LASSO model to the combinations of hyperparameter values from each cross validation grid search iteration of **create_nnet_tune.R** and **create_xgboost_tune.R** jobs. This LASSO model will incorporate or eliminate models into a model ensemble based on the performance of the hyperparamter sets that were tested. Models incorporated into an ensemble will be weighted according to performance on test data. This will ultimately create a group of models that will make predictions (in terms of probability) about the presence or absence of a KEGG module in a bacterial genome based on its recovered gene annotations. Each probability calculated by a model will then be multiplied by the coefficient it was assigned by the LASSO model.
+  - **fit_xgboost_newest_april_2022.R**: this code will fit an individual XGBoost model, using the hyperparamters from **create_xgboost_tune.R** that had the highest Kohen's Kappa and ROC_AUC scores. Performance of these models on held-out test data can then be compared to the performance of the ensemble models trained using **train_ensemble.R**.
+  - **ensemble_master_script.R**: this is a conglomeration of all the training scripts menteioned above that are used to train a neural network/XGBoost ensemble model.
+
+
