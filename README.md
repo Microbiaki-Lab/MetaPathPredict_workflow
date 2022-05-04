@@ -27,7 +27,7 @@ More details will be added here to give background information about KEGG metabo
  
   - **fit_xgboost_newest_april_2022.R**: this code will fit an individual XGBoost model, using the hyperparameters from **create_xgboost_tune.R** that had the highest Cohen's Kappa and ROC_AUC scores. Performance of these models on held-out test data can then be compared to the performance of the ensemble models trained using **train_ensemble.R**.
  
-  - **ensemble_master_script.R**: this is a conglomeration of all the training scripts menteioned above that are used to train a neural network/XGBoost ensemble model.
+  - **ensemble_master_script.R**: this is a compilation of all the training scripts menteioned above that are used to train a neural network/XGBoost ensemble model.
 <br>  
 
 ### Code in the rscripts/model_assessment_scripts directory:
