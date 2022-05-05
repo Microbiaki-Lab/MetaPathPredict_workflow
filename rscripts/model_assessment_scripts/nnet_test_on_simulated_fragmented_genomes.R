@@ -19,7 +19,7 @@ options(future.globals.maxSize = 51380224000)
 load('/vortexfs1/home/dgellermcgrath/FRAGMENTED_GENOMES_REQD_OBJECTS_MAY_2022.rds')
 
 
-models = system('realpath /vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/butchered_xgboost_models/*', intern = TRUE)
+models = system('realpath /vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/butchered_nnet_models/*', intern = TRUE)
 #/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemba/ensemble_models
 
 model_names = str_replace(models, '\\/.*\\/+(M\\d{5})_.*', '\\1')
@@ -106,7 +106,7 @@ formatted_test_data = future_imap_dfr(kofam_data, ~ {
 })
 
 
-test_and_get_xgb_conf_matrices_for = function(formatted_test_data,
+test_and_get_nnet_conf_matrices_for = function(formatted_test_data,
                                               module_name,
                                               model) {
 
@@ -134,27 +134,27 @@ test_and_get_xgb_conf_matrices_for = function(formatted_test_data,
 }
 
 
-safely_test_and_get_xgb_conf_matrices_for = safely(test_and_get_xgb_conf_matrices_for)
+safely_test_and_get_nnet_conf_matrices_for = safely(test_and_get_nnet_conf_matrices_for)
 
 
 #set.seed(123)
-xgb_conf_matrices = future_pmap(
+nnet_conf_matrices = future_pmap(
   .progress = TRUE,
   .options = furrr_options(seed = TRUE),
   list(
     list(formatted_test_data),
     model_names,
     models), ~
-    safely_test_and_get_xgb_conf_matrices_for(..1, ..2, ..3)
+    safely_test_and_get_nnet_conf_matrices_for(..1, ..2, ..3)
 )
 
-xgb_conf_matrices = xgb_conf_matrices %>%
+nnet_conf_matrices = nnet_conf_matrices %>%
   map(~ .x$result) %>%
   set_names(model_names) %>%
   keep(~ !is.null(.x))
 
-xgb_gen_perf_metrics <- purrr::imap_dfr(
-  xgb_conf_matrices, ~
+nnet_gen_perf_metrics <- purrr::imap_dfr(
+  nnet_conf_matrices, ~
     .x$conf_mat %>%
     purrr::keep(~ 'Kappa' %in% names(.x) | 'F1' %in% names(.x)) %>%
     purrr::flatten() %>%
@@ -162,8 +162,8 @@ xgb_gen_perf_metrics <- purrr::imap_dfr(
     dplyr::mutate(model_name = .y, .before = 1) %>%
     dplyr::relocate(c(F1, Precision, Recall, Specificity, `Balanced Accuracy`), .after = 1))
 
-xgb_strat =
-  xgb_conf_matrices %>%
+nnet_strat =
+  nnet_conf_matrices %>%
   imap(~ .x$pred_md %>%
          mutate(grouping_col = str_replace(
            genome_name, '^.*_(\\d+)-contigs.*', '\\1')) %>%
@@ -200,8 +200,8 @@ xgb_strat =
 
 
 
-save(xgb_strat, xgb_gen_perf_metrics, xgb_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/UPDATED_051222_xgboost_models_SPARSIFICATION_test_results_so_far')
+save(nnet_strat, nnet_gen_perf_metrics, nnet_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/UPDATED_051222_nnet_models_SPARSIFICATION_test_results_so_far')
 
 
-#save(xgb_strat, xgb_gen_perf_metrics, xgb_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/xgboost_models_sparsification_test_results_so_far.rdata')
+#save(nnet_strat, nnet_gen_perf_metrics, nnet_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/xgboost_models_sparsification_test_results_so_far.rdata')
 #

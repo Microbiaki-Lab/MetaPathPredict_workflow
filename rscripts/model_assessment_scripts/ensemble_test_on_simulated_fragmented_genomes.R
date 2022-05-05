@@ -7,29 +7,39 @@ library(recipeselectors)
 library(furrr)
 library(stacks)
 
-plan(multicore, workers = 35) #5000 * 1024 ^2 - 30Gb per core, 10 cores total
-options(future.globals.maxSize = 5242880000)
+#SETTINGS FOR BIGMEM NODE
+plan(multicore, workers = 30) #81000 * 1024 ^2 - 30Gb per core, 10 cores total
+options(future.globals.maxSize = 84934656000)
 
-files = system('realpath /vortexfs1/omics/pachiadaki/dgellermcgrath/lasso/feature-tables/training-data-072821/hq_bact_ko_analysis_November_2021/SRA_FILES/feb_2022_sparsification_redo/annotations/*.tsv', intern = TRUE)
+#files = system('realpath /vortexfs1/omics/pachiadaki/dgellermcgrath/lasso/feature-tables/training-data-072821/hq_bact_ko_analysis_November_2021/SRA_FILES/feb_2022_sparsification_redo/annotations/*.tsv', intern = TRUE)
 
-genome_names = str_replace(files, '\\/.*\\/+(.*.tsv)', '\\1')
+#genome_names = str_replace(files, '\\/.*\\/+(.*.tsv)', '\\1')
 
-models = system('realpath /vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/ensemble_models/*', intern = TRUE)
+load('/vortexfs1/home/dgellermcgrath/FRAGMENTED_GENOMES_REQD_OBJECTS_MAY_2022.rds')
+
+models = system('realpath /vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/ensemble_models_lower_lasso_penalty/*', intern = TRUE)
 #/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemba/ensemble_models
 
 model_names = str_replace(models, '\\/.*\\/+(M\\d{5})_\\d.*', '\\1')
 
 
+## NEXT: GO DOWN TO test_and_get_ens_conf_matrices_for AND RUN ALL OF THAT CODE + BELOW IT
+
 # load all_kegg_modules, patt.kegg_modules, filler (0 row tibble of all columns new test data needs)
-load('/vortexfs1/omics/pachiadaki/dgellermcgrath/lasso/feature-tables/training-data-072821/allKeggModules-PattKeggModules-080321.RData')
-filler = readRDS('/vortexfs1/omics/pachiadaki/dgellermcgrath/lasso/feature-tables/training-data-072821/hq_bact_ko_analysis_November_2021/SRA_FILES/NEW_ATTEMPT_DECEMBER_03_21/assemblies/up-to-date-filler-feb-2022.rda')
+#load('/vortexfs1/omics/pachiadaki/dgellermcgrath/lasso/feature-tables/training-data-072821/allKeggModules-PattKeggModules-080321.RData')
+#filler = readRDS('/vortexfs1/omics/pachiadaki/dgellermcgrath/lasso/feature-tables/training-data-072821/hq_bact_ko_analysis_November_2021/SRA_FILES/NEW_ATTEMPT_DECEMBER_03_21/assemblies/up-to-date-filler-feb-2022.rda')
 
 
-get_size = function(.data) {
-  .data %>%
-    object.size() %>%
-    format(units = "Mb")
+size = function(.data) {
+  print(paste0(.data, ': ',
+               (get(.data) %>%
+                  object.size() %>%
+                  format(units = "Mb"))
+  ))
 }
+
+
+
 read_kofam = function(.data, .genome_name, cutoff = 1e-7) {
   vroom::vroom(.data, show_col_types = FALSE, delim = '\t') %>%
     rename(adaptive_threshold = 1,
@@ -131,11 +141,11 @@ test_and_get_ens_conf_matrices_for = function(formatted_test_data,
 
 safely_test_and_get_ens_conf_matrices_for = safely(test_and_get_ens_conf_matrices_for)
 
-plan(multicore, workers = 50) #49000 * 1024 ^2 - 30Gb per core, 10 cores total
-options(future.globals.maxSize = 51380224000)
+#plan(multicore, workers = 50) #49000 * 1024 ^2 - 30Gb per core, 10 cores total
+#options(future.globals.maxSize = 51380224000)
 
-set.seed(123)
-ens_conf_matrices = future_pmap(#.progress = TRUE, .options = furrr_options(seed = 123),
+#set.seed(123)
+ens_conf_matrices = future_pmap(.progress = TRUE,
   .options = furrr_options(seed = TRUE),
   list(
     list(formatted_test_data),
@@ -196,7 +206,7 @@ ens_strat =
 
 
 
-save(ens_strat, ens_gen_perf_metrics, ens_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/ensemble_models_sparsification_test_results_so_far.rdata')
+save(ens_strat, ens_gen_perf_metrics, ens_conf_matrices, file = '/vortexfs1/omics/pachiadaki/dgellermcgrath/ensemble/rdata/auxiliary_r_data/UPDATED_051222_ensemble_models_SPARSIFICATION_test_results_so_far.rdata')
 #
 
 
@@ -253,6 +263,7 @@ genome_metadata %>%
 
 load('~/Documents/import-metagenome-databases/bac-ncbi-genome-names-refseq-genbank-02232021.RData')
 
+load('~/Documents/import-metagenome-databases/training-genome-information-tibbles-gtdb-refseq.RData')
 
 sparse_genome_metadata = read_csv('~/Downloads/SraRunInfo.csv')
 
@@ -285,8 +296,9 @@ new_sparse = sparse_genome_metadata %>%
   filter(n == 1) %>%
   select(-n)
 
+rm(refseq_cur, new_fnb, gtdb_95.tidy_trimmed, genome_metadata)
 
-
+saveRDS(new_sparse, file = 'rdata_files/model_metadata/genomes_used_forsparsification_50_metadata.rda')
 
 #
 new_sparse$run %>%
